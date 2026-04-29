@@ -1,97 +1,31 @@
+# ESP32 SmartKey Controller Firmware
 
-# Appendix A: Main Firmware Code
+## Hybrid Architecture
+This firmware enables the ESP32 to function in both **Cloud (Online)** and **Direct (Offline)** modes.
 
-## File: src/main.cpp
+- **Online Mode**: Uses **WiFi** + **MQTT (HiveMQ Cloud)**. The ESP32 subscribes to `{prefix}/hardware/command` and publishes heartbeat status to `{prefix}/hardware/status`.
+- **Offline Mode**: Uses **Bluetooth Low Energy (BLE)** with the Nordic UART Service (NUS). This allows direct communication with the PWA when the internet is unavailable.
+- **Failover Logic**: The PWA prioritizes MQTT. If the browser detects a network failure, it initiates a BLE connection to the hardware.
 
-This is the main entry point for the ESP32 controller. It initializes the core subsystems and runs the main loop.
+## Libraries Required
+1. **PubSubClient** (by Nick O'Leary) - For MQTT communication.
+2. **ArduinoJson** (by Benoit Blanchon) - For JSON processing.
+3. **LittleFS** (Built-in) - For persistent storage.
+4. **BLE Arduino** (Built-in for ESP32) - For the local UART bridge.
+5. **WiFiClientSecure** (Built-in) - For MQTTS (TLS) support.
 
-```cpp
-/*
- * Project: SmartKey IoT Controller
- * Device: KinCony KC868-A4 (ESP32)
- * File: src/main.cpp
- * Author: Final Year Project Team
- * 
- * Description:
- * Main entry point for the firmware. Initializes the 3 core managers:
- * 1. StorageManager (Flash Memory/LittleFS)
- * 2. HardwareManager (GPIO, Relays, Sensors)
- * 3. NetworkManager (WiFi, Firebase, WebServer)
- */
+## Provisioning
+If no WiFi credentials are found, the device starts in AP Mode (`KC868_EMERGENCY`). The PWA sends setup data via a POST to `/provision`.
 
-#include <Arduino.h>
-#include "Config.h"
-#include "StorageManager.h"
-#include "HardwareManager.h"
-#include "NetworkManager.h"
-
-// ---------------------------------------------------------------------------
-// GLOBAL OBJECTS
-// ---------------------------------------------------------------------------
-StorageManager storage;
-HardwareManager hw;
-// Inject dependencies via constructor injection
-NetworkManager net(&storage, &hw); 
-
-// ---------------------------------------------------------------------------
-// SETUP
-// ---------------------------------------------------------------------------
-void setup() {
-  // 1. Serial Telemetry
-  Serial.begin(SERIAL_BAUD);
-  delay(1000); 
-  
-  Serial.println(F("\n\n"));
-  Serial.println(F("#############################################"));
-  Serial.println(F("#     SMARTKEY IOT CONTROLLER FIRMWARE      #"));
-  Serial.println(F("#     v2.5 - Split-Brain Architecture       #"));
-  Serial.println(F("#############################################"));
-
-  // 2. Mount File System
-  Serial.println(F("[BOOT] Mounting LittleFS..."));
-  if (storage.begin()) {
-    storage.loadConfig();
-  } else {
-    Serial.println(F("[BOOT] (!) LittleFS Mount Failed. Formatting..."));
-    // In a real scenario, we might format or halt.
-    // For FYP reliability, we continue to try and run in AP mode.
-  }
-
-  // 3. Initialize GPIOs
-  Serial.println(F("[BOOT] configuring I/O Pins..."));
-  hw.begin();
-
-  // 4. Start Network Stack
-  Serial.println(F("[BOOT] Starting Network Services..."));
-  net.begin();
-
-  Serial.println(F("[BOOT] Initialization Complete. Entering Main Loop."));
-}
-
-// ---------------------------------------------------------------------------
-// MAIN LOOP
-// ---------------------------------------------------------------------------
-void loop() {
-  // 1. Service Network Requests
-  //    - Handles WebServer clients (Provisioning)
-  //    - Handles Firebase Keep-Alive
-  net.update();
-
-  // 2. Hardware Tasks
-  //    - Checks E-Stop State
-  //    - Manages Sequential Release Timing
-  hw.update();
-
-  // 3. Watchdog / Debug Heartbeat (Every 10s)
-  static unsigned long lastBeat = 0;
-  if (millis() - lastBeat > 10000) {
-    lastBeat = millis();
-    
-    // Minimal logging to confirm life
-    Serial.printf("[SYS] Tick. RAM: %d free. WiFi: %s\n", 
-      ESP.getFreeHeap(), 
-      WiFi.status() == WL_CONNECTED ? "Connected" : "AP Mode"
-    );
-  }
-}
+## Command Protocol (JSON)
+Common commands handled by both MQTT and BLE:
+```json
+{ "action": "unlock", "slotId": 1 }
+{ "action": "force_return", "slotId": 2 }
+{ "action": "maintenance", "slotId": 3, "type": "cycle_test" }
 ```
+
+## Security
+- **MQTT**: HiveMQ Cloud clusters require TLS (8883) and Cluster Credentials.
+- **BLE**: Uses MAC binding and UUID filtering.
+- **Hardware**: Integrated E-Stop logic provides a physical safety override.

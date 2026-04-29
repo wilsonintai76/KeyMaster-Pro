@@ -17,14 +17,14 @@ export const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
   officeOpenTime: '09:00',
   officeCloseTime: '17:00',
   maintenanceThreshold: 300,
-  enableAI: false,
-  geminiApiKey: '',
   systemID: 'SYS-001',
   sessionTimeout: 30,
   offlineStorage: 'browser',
-  adminEmail: 'admin@example.com',
-  mqttUrl: 'wss://broker.emqx.io:8084/mqtt',
-  mqttTopicPrefix: 'smartkey/sys-001'
+  adminEmail: 'wilsonintai76@gmail.com',
+  mqttUrl: 'wss://abcfe3c006e246f183dadaf615474714.s1.eu.hivemq.cloud:8884/mqtt',
+  mqttTopicPrefix: 'smartkey/sys-001',
+  mqttUsername: 'hivemq.webclient.1777425502210',
+  mqttPassword: 'oqG,A2%7>3t4QPsSBum*'
 };
 
 export const DEFAULT_SUPABASE_CONFIG: SupabaseConfig = {

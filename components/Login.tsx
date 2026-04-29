@@ -67,7 +67,7 @@ export const Login: React.FC<LoginProps> = ({
     }
   };
 
-  const isGoogleAuthDisabled = networkMode === 'local' || (!isCloudConnected && networkMode === 'cloud' && !isConnecting);
+  const isGoogleAuthDisabled = networkMode === 'local';
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-900 p-6">

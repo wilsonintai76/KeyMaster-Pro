@@ -27,7 +27,11 @@ interface DashboardProps {
   isHardwareTriggerActive?: boolean;
   controllerStatus?: ControllerStatus;
   isCloudConnected?: boolean;
+  isMqttConnected?: boolean;
+  isBluetoothConnected?: boolean;
+  bluetoothStatus?: string;
   onSwitchToLocalMode: () => void;
+  onConnectBluetooth?: () => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
@@ -51,7 +55,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
   isHardwareTriggerActive = false,
   controllerStatus,
   isCloudConnected = false,
-  onSwitchToLocalMode
+  isMqttConnected = false,
+  isBluetoothConnected = false,
+  bluetoothStatus = 'disconnected',
+  onSwitchToLocalMode,
+  onConnectBluetooth
 }) => {
   // Utility to group slots into racks of 4
   const chunkedSlots: KeySlot[][] = [];
@@ -186,7 +194,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div>
               <h2 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Workshop Resources</h2>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Real-time Node Monitoring</p>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mt-1">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Real-time Node Monitoring</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-50 border border-slate-100">
+                    <div className={`w-1 h-1 rounded-full ${isMqttConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`}></div>
+                    <span className="text-[8px] font-black uppercase text-slate-500">{isMqttConnected ? 'Cloud Active' : 'Cloud Offline'}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-50 border border-slate-100">
+                    <div className={`w-1 h-1 rounded-full ${isBluetoothConnected ? 'bg-blue-500 animate-pulse' : 'bg-slate-300'}`}></div>
+                    <span className="text-[8px] font-black uppercase text-slate-500">{isBluetoothConnected ? 'Bluetooth Active' : 'Bluetooth Offline'}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

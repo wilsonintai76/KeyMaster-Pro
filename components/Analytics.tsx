@@ -5,15 +5,11 @@ import { MaintenanceForecast } from './MaintenanceForecast';
 import { ComplianceReport } from './ComplianceReport';
 import { ResourceUtilization } from './ResourceUtilization';
 import { StatScorecards } from './StatScorecards';
-import { AiExecutiveSummary } from './AiExecutiveSummary';
 
 interface AnalyticsProps {
   slots: KeySlot[];
   logs: LogEntry[];
   config: SystemConfig;
-  aiReport: string;
-  isGeneratingAi: boolean;
-  onGenerateAiReport: () => Promise<void>;
   isAdminMode: boolean;
   user: { name: string } | null;
 }
@@ -22,9 +18,6 @@ export const Analytics: React.FC<AnalyticsProps> = ({
   slots,
   logs,
   config,
-  aiReport,
-  isGeneratingAi,
-  onGenerateAiReport,
   isAdminMode,
   user
 }) => {
@@ -54,9 +47,6 @@ export const Analytics: React.FC<AnalyticsProps> = ({
        const health = Math.max(0, 100 - (s.usageCount / config.maintenanceThreshold * 100));
        report += `${s.label},${s.usageCount},${Math.round(health)}%\n`;
     });
-    if (config.enableAI && aiReport) {
-        report += `\n--- AI EXECUTIVE SUMMARY ---\n"${report.replace(/"/g, '""')}"\n`;
-    }
     const blob = new Blob([report], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -78,16 +68,6 @@ export const Analytics: React.FC<AnalyticsProps> = ({
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Monthly Performance & Compliance Review</p>
         </div>
         <div className="flex gap-2">
-          {config.enableAI && config.geminiApiKey && (
-            <button 
-              onClick={onGenerateAiReport} 
-              disabled={isGeneratingAi} 
-              className="px-6 py-3 rounded-2xl text-[10px] font-black uppercase transition-all shadow-xl flex items-center gap-3 bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isGeneratingAi ? <i className="fa-solid fa-spinner animate-spin"></i> : <i className="fa-solid fa-wand-magic-sparkles"></i>}
-              {isGeneratingAi ? 'Analyzing...' : 'Ask AI Assistant'}
-            </button>
-          )}
           <button 
             onClick={exportAnalyticsReport} 
             className="bg-slate-900 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase hover:bg-slate-800 transition-all shadow-xl flex items-center gap-3"
@@ -96,11 +76,6 @@ export const Analytics: React.FC<AnalyticsProps> = ({
           </button>
         </div>
       </div>
-      
-      <AiExecutiveSummary 
-        aiReport={aiReport}
-        isEnabled={config.enableAI && !!config.geminiApiKey}
-      />
       
       <StatScorecards 
         totalResources={slots.length}

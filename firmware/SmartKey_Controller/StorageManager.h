@@ -9,8 +9,11 @@
 struct SystemConfigData {
   String wifi_ssid;
   String wifi_pass;
-  String fb_url;
-  String fb_key;
+  String mqtt_server;
+  int mqtt_port;
+  String mqtt_user;
+  String mqtt_pass;
+  String mqtt_topic_prefix;
   String system_id;
 };
 
@@ -44,8 +47,11 @@ public:
     if (!error) {
       config.wifi_ssid = doc["wifi_ssid"].as<String>();
       config.wifi_pass = doc["wifi_pass"].as<String>();
-      config.fb_url    = doc["firebase_url"].as<String>();
-      config.fb_key    = doc["firebase_key"].as<String>();
+      config.mqtt_server = doc["mqtt_server"].as<String>();
+      config.mqtt_port   = doc["mqtt_port"] | 8883;
+      config.mqtt_user   = doc["mqtt_user"].as<String>();
+      config.mqtt_pass   = doc["mqtt_pass"].as<String>();
+      config.mqtt_topic_prefix = doc["topic_prefix"].as<String>();
       config.system_id = doc["system_id"].as<String>();
       Serial.print(F("[FS] Config Loaded: "));
       Serial.println(config.system_id);

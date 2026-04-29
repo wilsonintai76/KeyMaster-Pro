@@ -6,6 +6,7 @@ interface CloudConnectionConfigProps {
   config: SupabaseConfig;
   sysConfig: SystemConfig;
   setConfig: React.Dispatch<React.SetStateAction<SupabaseConfig>>;
+  onUpdateSysConfig: (updates: Partial<SystemConfig>) => void;
   onConnect: () => Promise<void>;
   onDisconnect: () => void;
   isConnected: boolean;
@@ -21,6 +22,7 @@ export const CloudConnectionConfig: React.FC<CloudConnectionConfigProps> = ({
   config,
   sysConfig,
   setConfig,
+  onUpdateSysConfig,
   onConnect,
   onDisconnect,
   isConnected,
@@ -33,6 +35,7 @@ export const CloudConnectionConfig: React.FC<CloudConnectionConfigProps> = ({
 }) => {
   // By default, collapse the advanced settings if already connected or populated
   const [isExpanded, setIsExpanded] = useState(!isConnected && (!config.supabaseAnonKey || config.supabaseAnonKey === ''));
+  const [showMqttSettings, setShowMqttSettings] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   
   // Provisioning State
@@ -40,8 +43,24 @@ export const CloudConnectionConfig: React.FC<CloudConnectionConfigProps> = ({
   const [wifiPass, setWifiPass] = useState('');
   const [provisionStatus, setProvisionStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
 
+  const [localMqtt, setLocalMqtt] = useState({
+    url: sysConfig.mqttUrl || '',
+    user: sysConfig.mqttUsername || '',
+    pass: sysConfig.mqttPassword || '',
+    prefix: sysConfig.mqttTopicPrefix || ''
+  });
+
   const handleChange = (field: keyof SupabaseConfig, value: string) => {
     setConfig(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleApplyMqtt = () => {
+    onUpdateSysConfig({
+      mqttUrl: localMqtt.url,
+      mqttUsername: localMqtt.user,
+      mqttPassword: localMqtt.pass,
+      mqttTopicPrefix: localMqtt.prefix
+    });
   };
 
   const handleCloudToggle = async () => {
@@ -153,15 +172,89 @@ export const CloudConnectionConfig: React.FC<CloudConnectionConfigProps> = ({
               </button>
            </div>
            
-           <div className="flex justify-end px-1">
-             <button 
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="py-2 text-[8px] font-black uppercase text-slate-400 hover:text-blue-500 flex items-center gap-2 transition-colors"
-             >
-               <i className={`fa-solid ${isExpanded ? 'fa-chevron-up' : 'fa-gear'}`}></i>
-               {isExpanded ? 'Hide Advanced Config' : 'Show Advanced Connection Settings'}
-             </button>
-           </div>
+            <div className="flex justify-end px-1 gap-4">
+              <button 
+               onClick={() => setShowMqttSettings(!showMqttSettings)}
+               className="py-2 text-[8px] font-black uppercase text-slate-400 hover:text-blue-500 flex items-center gap-2 transition-colors underline decoration-dotted"
+              >
+                <i className={`fa-solid ${showMqttSettings ? 'fa-chevron-up' : 'fa-network-wired'}`}></i>
+                {showMqttSettings ? 'Hide MQTT Node' : 'MQTT Gateway Config'}
+              </button>
+              <button 
+               onClick={() => setIsExpanded(!isExpanded)}
+               className="py-2 text-[8px] font-black uppercase text-slate-400 hover:text-blue-500 flex items-center gap-2 transition-colors"
+              >
+                <i className={`fa-solid ${isExpanded ? 'fa-chevron-up' : 'fa-gear'}`}></i>
+                {isExpanded ? 'Hide Data Config' : 'Supabase Credentials'}
+              </button>
+            </div>
+
+            {/* MQTT Settings */}
+            {showMqttSettings && (
+               <div className="grid grid-cols-1 gap-3 pt-2 animate-fadeIn bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <p className="text-[8px] font-bold text-slate-400 uppercase mb-2 border-b border-slate-200 pb-2 flex items-center gap-2">
+                    <i className="fa-solid fa-tower-broadcast text-blue-500"></i>
+                    HiveMQ / EMQX Global Broker Config
+                  </p>
+
+                  <div className="bg-blue-50 border border-blue-100 p-2.5 rounded-xl mb-1">
+                    <p className="text-[9px] text-blue-600 font-medium leading-relaxed">
+                      <i className="fa-solid fa-circle-info mr-1"></i>
+                      <strong>HiveMQ Cloud:</strong> You must create a "Database User" in your HiveMQ Console. Use those credentials here.
+                    </p>
+                  </div>
+
+                  <div>
+                      <label className="text-[8px] font-black uppercase text-slate-400 ml-1 mb-1 block">Broker URL (WSS)</label>
+                      <input 
+                        type="text"
+                        value={localMqtt.url}
+                        onChange={(e) => setLocalMqtt(prev => ({ ...prev, url: e.target.value }))}
+                        placeholder="wss://cluster.s1.hivemq.cloud:8884/mqtt"
+                        className="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-[10px] font-mono font-bold text-slate-700 outline-none focus:border-blue-400 transition-colors"
+                      />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                        <label className="text-[8px] font-black uppercase text-slate-400 ml-1 mb-1 block">Username</label>
+                        <input 
+                          type="text"
+                          value={localMqtt.user}
+                          onChange={(e) => setLocalMqtt(prev => ({ ...prev, user: e.target.value }))}
+                          placeholder="MQTT User"
+                          className="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-[10px] font-mono font-bold text-slate-700 outline-none focus:border-blue-400 transition-colors"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-[8px] font-black uppercase text-slate-400 ml-1 mb-1 block">Password</label>
+                        <input 
+                          type="password"
+                          value={localMqtt.pass}
+                          onChange={(e) => setLocalMqtt(prev => ({ ...prev, pass: e.target.value }))}
+                          placeholder="MQTT Pass"
+                          className="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-[10px] font-mono font-bold text-slate-700 outline-none focus:border-blue-400 transition-colors"
+                        />
+                    </div>
+                  </div>
+                  <div>
+                      <label className="text-[8px] font-black uppercase text-slate-400 ml-1 mb-1 block">Topic Prefix</label>
+                      <input 
+                        type="text"
+                        value={localMqtt.prefix}
+                        onChange={(e) => setLocalMqtt(prev => ({ ...prev, prefix: e.target.value }))}
+                        placeholder="smartkey/v1"
+                        className="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-[10px] font-mono font-bold text-slate-700 outline-none focus:border-blue-400 transition-colors"
+                      />
+                  </div>
+                  <button 
+                    onClick={handleApplyMqtt}
+                    className="w-full mt-2 py-2 bg-blue-500 text-white rounded-xl text-[9px] font-black uppercase hover:bg-blue-600 transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    <i className="fa-solid fa-cloud-arrow-up"></i>
+                    Apply Gateway Changes
+                  </button>
+               </div>
+            )}
 
            {/* Expanded Config (Hidden by default if connected) */}
            {isExpanded && (

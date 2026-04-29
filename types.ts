@@ -46,14 +46,14 @@ export interface SystemConfig {
   officeOpenTime: string;
   officeCloseTime: string;
   maintenanceThreshold: number;
-  enableAI: boolean;
-  geminiApiKey: string; // Added user-configurable API Key
   systemID: string;
   sessionTimeout: number; // Duration in minutes before auto-logout
   offlineStorage: 'browser' | 'board'; // New: Choose between IndexedDB or LittleFS
   adminEmail?: string; // New: Persist the Super Admin email from Wizard
   mqttUrl?: string; // e.g. wss://broker.hivemq.com:8884/mqtt
   mqttTopicPrefix?: string; // e.g. smartkey/system-1
+  mqttUsername?: string;
+  mqttPassword?: string;
 }
 
 export interface SupabaseConfig {

@@ -42,6 +42,9 @@ interface AdminHubProps {
   supabaseConfig: SupabaseConfig;
   setSupabaseConfig: React.Dispatch<React.SetStateAction<SupabaseConfig>>;
   isCloudConnected: boolean;
+  isMqttConnected: boolean;
+  isBluetoothConnected: boolean;
+  bluetoothStatus: string;
   onConnect: () => Promise<void>;
   onDisconnect: () => void;
   networkMode: 'cloud' | 'local';
@@ -89,6 +92,9 @@ export const AdminHub: React.FC<AdminHubProps> = ({
   supabaseConfig,
   setSupabaseConfig,
   isCloudConnected,
+  isMqttConnected,
+  isBluetoothConnected,
+  bluetoothStatus,
   onConnect,
   onDisconnect,
   networkMode,
@@ -145,6 +151,7 @@ export const AdminHub: React.FC<AdminHubProps> = ({
             config={supabaseConfig}
             sysConfig={config}
             setConfig={setSupabaseConfig}
+            onUpdateSysConfig={onUpdateConfig}
             onConnect={onConnect}
             onDisconnect={onDisconnect}
             isConnected={isCloudConnected}
@@ -165,6 +172,9 @@ export const AdminHub: React.FC<AdminHubProps> = ({
             tempConfig={tempConfig}
             setTempConfig={setTempConfig}
             onSave={saveConfig}
+            isMqttConnected={isMqttConnected}
+            isBluetoothConnected={isBluetoothConnected}
+            bluetoothStatus={bluetoothStatus}
           />
 
           <HardwareRegistration 

@@ -6,18 +6,36 @@ interface GlobalPolicyConfigProps {
   tempConfig: SystemConfig;
   setTempConfig: React.Dispatch<React.SetStateAction<SystemConfig>>;
   onSave: () => void;
+  isMqttConnected: boolean;
+  isBluetoothConnected?: boolean;
+  bluetoothStatus?: string;
 }
 
 export const GlobalPolicyConfig: React.FC<GlobalPolicyConfigProps> = ({
   tempConfig,
   setTempConfig,
-  onSave
+  onSave,
+  isMqttConnected,
+  isBluetoothConnected = false,
+  bluetoothStatus = 'disconnected'
 }) => {
   return (
     <div className="bg-white p-6 md:p-8 rounded-[40px] border border-slate-100 shadow-sm">
-      <h3 className="font-black text-slate-900 text-sm uppercase mb-6 flex items-center gap-3">
-        <i className="fa-solid fa-sliders text-blue-600"></i> Global Policy Config
-      </h3>
+      <div className="flex justify-between items-start mb-6">
+        <h3 className="font-black text-slate-900 text-sm uppercase flex items-center gap-3">
+          <i className="fa-solid fa-sliders text-blue-600"></i> Global Policy Config
+        </h3>
+        <div className="flex flex-col items-end gap-1.5">
+          <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[8px] font-black uppercase ${isMqttConnected ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}>
+            <div className={`w-1.5 h-1.5 rounded-full ${isMqttConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`}></div>
+            {isMqttConnected ? 'Cloud Active' : 'Cloud Idle'}
+          </div>
+          <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[8px] font-black uppercase ${isBluetoothConnected ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}>
+            <div className={`w-1.5 h-1.5 rounded-full ${isBluetoothConnected ? 'bg-blue-500 animate-pulse' : 'bg-slate-300'}`}></div>
+            {isBluetoothConnected ? 'BT Stream Active' : String(bluetoothStatus).toUpperCase()}
+          </div>
+        </div>
+      </div>
       
       <div className="space-y-6">
         {/* System ID */}
@@ -66,7 +84,29 @@ export const GlobalPolicyConfig: React.FC<GlobalPolicyConfigProps> = ({
           />
         </div>
 
-        {/* Session Timeout */}
+        {/* Offline Storage Preference */}
+        <div>
+          <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">
+            Offline Storage Primary
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <button 
+              onClick={() => setTempConfig({...tempConfig, offlineStorage: 'browser'})}
+              className={`p-3 rounded-xl border text-[10px] font-black uppercase transition-all ${tempConfig.offlineStorage === 'browser' ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-400 border-slate-200'}`}
+            >
+              <i className="fa-solid fa-database mr-2"></i> PWA IndexDB
+            </button>
+            <button 
+              onClick={() => setTempConfig({...tempConfig, offlineStorage: 'board'})}
+              className={`p-3 rounded-xl border text-[10px] font-black uppercase transition-all ${tempConfig.offlineStorage === 'board' ? 'bg-amber-500 text-white border-amber-500' : 'bg-slate-50 text-slate-400 border-slate-200'}`}
+            >
+              <i className="fa-solid fa-microchip mr-2"></i> ESP32 SPIFFS
+            </button>
+          </div>
+          <p className="text-[8px] text-slate-400 mt-2 italic px-1">
+            Determines where logs are cached when primary online stream is lost.
+          </p>
+        </div>
         <div>
           <div className="flex justify-between mb-2">
             <label className="text-[10px] font-black uppercase text-blue-600 tracking-widest">Session Timeout</label>
@@ -109,6 +149,36 @@ export const GlobalPolicyConfig: React.FC<GlobalPolicyConfigProps> = ({
             className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-xs font-medium focus:ring-1 focus:ring-slate-400 outline-none mb-3"
             placeholder="wss://broker.emqx.io:8084/mqtt"
           />
+          
+          <div className="bg-slate-50 p-4 rounded-xl mb-4 border border-slate-100">
+            <p className="text-[8px] font-black uppercase text-slate-400 mb-3 tracking-tighter">Security Credentials</p>
+            <div className="space-y-3">
+              <div>
+                <label className="text-[9px] font-bold text-slate-500 mb-1 block">Username</label>
+                <input 
+                  type="text" 
+                  value={tempConfig.mqttUsername || ''} 
+                  onChange={(e) => setTempConfig({...tempConfig, mqttUsername: e.target.value})} 
+                  className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-xs font-medium focus:ring-1 focus:ring-slate-400 outline-none"
+                  placeholder="MQTT User"
+                />
+              </div>
+              <div>
+                <label className="text-[9px] font-bold text-slate-500 mb-1 block">Password</label>
+                <input 
+                  type="password" 
+                  value={tempConfig.mqttPassword || ''} 
+                  onChange={(e) => setTempConfig({...tempConfig, mqttPassword: e.target.value})} 
+                  className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-xs font-medium focus:ring-1 focus:ring-slate-400 outline-none"
+                  placeholder="MQTT Pass"
+                />
+              </div>
+            </div>
+            <p className="text-[7px] text-slate-400 mt-2 italic">
+              Required for HiveMQ Cloud nodes. Create these in your HiveMQ Console under Access Management / Credentials.
+            </p>
+          </div>
+
           <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-2 block">MQTT Topic Prefix</label>
           <input 
             type="text" 

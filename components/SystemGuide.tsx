@@ -45,7 +45,6 @@ export const SystemGuide: React.FC<SystemGuideProps> = ({ isOpen, onClose }) => 
               {[
                 { icon: 'fa-shield-heart', label: 'Manual', color: 'bg-blue-600', desc: 'System Guide' },
                 { icon: 'fa-tower-broadcast', label: 'Failover', color: 'bg-amber-500', desc: 'Local AP Mode' },
-                { icon: 'fa-wand-magic-sparkles', label: 'AI Insight', color: 'bg-purple-600', desc: 'Gemini Analysis' },
                 { icon: 'fa-user-shield', label: 'Auth Node', color: 'bg-slate-800', desc: 'Admin Mode' },
                 { icon: 'fa-power-off', label: 'Actuate', color: 'bg-blue-600', desc: 'Release Solenoid' },
                 { icon: 'fa-lock', label: 'Inhibit', color: 'bg-amber-500', desc: 'Service Lock' },
